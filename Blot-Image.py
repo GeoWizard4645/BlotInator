@@ -5,17 +5,19 @@ import matplotlib.pyplot as plt
 from skimage import measure, transform
 import math
 
-
 # Set the detail level (1 for maximum detail, 0 for minimal detail)
-detail_level = 0.8  # Higher detail level for better quality
+detail_level = 0.8  # Higher detail level for better quality, honestely play with Downscale_factor if you are trying to reduce lines
 
 # Function to process the image and extract edges with higher precision
-def process_image(image_path):
+def process_image(image_path, downscale_factor=0.9):
     # Load image and convert to grayscale
     image = Image.open(image_path).convert("L")
     image = ImageOps.mirror(image)  # Mirror the image horizontally
     image = ImageOps.invert(image)  # Invert to make the background black and foreground white
     image = image.rotate(180)  # Rotate the image by 180 degrees
+    
+    # Downscale the image
+    image = image.resize((int(image.width * downscale_factor), int(image.height * downscale_factor)))
     image_array = np.array(image)
 
     # Calculate ksize (ensuring it's odd and positive)
@@ -27,9 +29,9 @@ def process_image(image_path):
     # Apply a slight blur to reduce noise
     blurred = cv2.GaussianBlur(image_array, ksize, 0)
 
-    # Use Canny edge detection with lower thresholds for more sensitivity
-    canny_threshold1 = int(round(-33.333333333 * detail_level + 56.6666666666667))
-    canny_threshold2 = int(round(-83.33333333 * detail_level + 166.666666667))
+    # Use Canny edge detection with higher thresholds to reduce edges
+    canny_threshold1 = int(round(-20.333333333 * detail_level + 66.6666666666667))
+    canny_threshold2 = int(round(-50.33333333 * detail_level + 150.666666667))
     edges = cv2.Canny(blurred, canny_threshold1, canny_threshold2)
 
     # Optionally, thicken the edges slightly
@@ -40,7 +42,6 @@ def process_image(image_path):
     contours = measure.find_contours(edges, 0.8)
     
     return contours, image_array.shape
-
 # Function to generate the Blot code
 def generate_blot_code(contours, dimensions, detail_level=0.8):
     maxDimension_y = 0
