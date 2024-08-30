@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from skimage import measure, transform
 import math
 
+
 # Set the detail level (1 for maximum detail, 0 for minimal detail)
 detail_level = 0.8  # Higher detail level for better quality
 
@@ -42,12 +43,20 @@ def process_image(image_path):
 
 # Function to generate the Blot code
 def generate_blot_code(contours, dimensions, detail_level=0.8):
+    maxDimension_y = 0
+    maxDimension_x = 0    
     print("Generating Blot code...")
     lines = []
     
     # Set a fixed tolerance for fine control over details
-    max_tolerance = 0.5  # More detail
-    min_tolerance = 0.1  # Minimal simplification
+    if -15 * detail_level + 13>0:
+        max_tolerance =  -15 * detail_level + 13>0 # High tolerance for significant simplification
+    else :
+        max_tolerance = 0.1
+    if -15 * detail_level + 13>0:
+        min_tolerance =  -1.5 * detail_level + 1.3>0 # High tolerance for significant simplification
+    else :
+        min_tolerance = 0.01
     tolerance = (1 - detail_level) * (max_tolerance - min_tolerance) + min_tolerance
     
     # Calculate bounding box of all contours
@@ -78,10 +87,18 @@ def generate_blot_code(contours, dimensions, detail_level=0.8):
                 y2 = int(y2 * scale + translate_y)
                 
                 lines.append(f"finalLines.push([[{x1}, {y1}], [{x2}, {y2}]]);\n")
+                if x1 > maxDimension_x:
+                    maxDimension_x = x1 +5
+                if x2 > maxDimension_x:
+                    maxDimension_x = x2 +5
+                if y1 > maxDimension_x:
+                    maxDimension_x = y1 +5
+                if y2 > maxDimension_x:
+                    maxDimension_x = y2 +5           
 
     blot_code = [
         "// Produced by Vivaan Shahani, based on Aditya Anand's Blotinator, not human-written\n",
-        f"setDocDimensions({dimensions[0]}, {dimensions[1]});\n",
+        f"setDocDimensions({str(maxDimension_x)}, {str(maxDimension_y)});\n",
         "const finalLines = [];\n"
     ]
     blot_code.extend(lines)
