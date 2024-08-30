@@ -1,4 +1,4 @@
-// Produced by Aditya Anand's Blotinator, not human-written
+// Produced by Vivaan Shahani, based on Aditya Anand's Blotinator, not human-written
 setDocDimensions(4032, 3024);
 const finalLines = [];
 finalLines.push([[1596, 45], [1560, 140]]);
