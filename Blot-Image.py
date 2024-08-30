@@ -2,23 +2,38 @@ from PIL import Image, ImageOps
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from skimage import measure, morphology
+from skimage import measure, transform
+import math
+
+# Set the detail level (1 for maximum detail, 0 for minimal detail)
+detail_level = 0.8  # Higher detail level for better quality
 
 # Function to process the image and extract edges with higher precision
 def process_image(image_path):
     # Load image and convert to grayscale
     image = Image.open(image_path).convert("L")
+    image = ImageOps.mirror(image)  # Mirror the image horizontally
     image = ImageOps.invert(image)  # Invert to make the background black and foreground white
+    image = image.rotate(180)  # Rotate the image by 180 degrees
     image_array = np.array(image)
 
+    # Calculate ksize (ensuring it's odd and positive)
+    ksize_value = max(3, int(round(-3.333333333333 * detail_level + 5.666666666666666667)))
+    if ksize_value % 2 == 0:
+        ksize_value += 1
+    ksize = (ksize_value, ksize_value)
+
     # Apply a slight blur to reduce noise
-    blurred = cv2.GaussianBlur(image_array, (3, 3), 0)
+    blurred = cv2.GaussianBlur(image_array, ksize, 0)
 
     # Use Canny edge detection with lower thresholds for more sensitivity
-    edges = cv2.Canny(blurred, 30, 100)
+    canny_threshold1 = int(round(-33.333333333 * detail_level + 56.6666666666667))
+    canny_threshold2 = int(round(-83.33333333 * detail_level + 166.666666667))
+    edges = cv2.Canny(blurred, canny_threshold1, canny_threshold2)
 
     # Optionally, thicken the edges slightly
-    edges = morphology.dilation(edges, morphology.disk(1))
+    edges = transform.rescale(edges, 1.0, anti_aliasing=True)
+    edges = cv2.dilate(edges, np.ones((2,2),np.uint8), iterations=1)
 
     # Use contours to find connected components
     contours = measure.find_contours(edges, 0.8)
@@ -65,7 +80,7 @@ def generate_blot_code(contours, dimensions, detail_level=0.8):
                 lines.append(f"finalLines.push([[{x1}, {y1}], [{x2}, {y2}]]);\n")
 
     blot_code = [
-        "// Produced by Aditya Anand's Blotinator, not human-written\n",
+        "// Produced by Vivaan Shahani, based on Aditya Anand's Blotinator, not human-written\n",
         f"setDocDimensions({dimensions[0]}, {dimensions[1]});\n",
         "const finalLines = [];\n"
     ]
@@ -77,13 +92,10 @@ def generate_blot_code(contours, dimensions, detail_level=0.8):
 # Main function
 if __name__ == "__main__":
     # Use the correct image path
-    image_path = '/Users/vivaanshahani/Downloads/image.png'
+    image_path = '/Users/vivaanshahani/Downloads/IMG_9654.png'
 
     # Process the image
     contours, dimensions = process_image(image_path)
-
-    # Set the detail level (1 for maximum detail, 0 for minimal detail)
-    detail_level = 1  # Higher detail level for better quality
 
     # Generate the Blot code with the specified detail level
     blot_code = generate_blot_code(contours, dimensions, detail_level)
