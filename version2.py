@@ -9,7 +9,7 @@ from sklearn.cluster import KMeans
 import math
 
 # Set the detail level (1 for maximum detail, 0 for minimal detail)
-detail_level = 1  # Adjusted to balance between details and line reduction
+detail_level = 1  # Just leave it here.
 
 # Function to process the image and extract edges
 def process_image(image_path, downscale_factor=0.85):
